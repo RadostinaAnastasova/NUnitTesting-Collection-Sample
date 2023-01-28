@@ -1,5 +1,6 @@
 using Collections;
 using NUnit.Framework.Constraints;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Collection.UnitTets
 {
@@ -114,5 +115,54 @@ namespace Collection.UnitTets
             Assert.That(()=> { var item = coll[2]; }, Throws.InstanceOf<ArgumentOutOfRangeException>());
             Assert.That(() => coll[2], Throws.InstanceOf<ArgumentOutOfRangeException>());
         }
+
+        [Test]
+        public void Test_AddRangeWithGrow()
+        {
+            Collection<int> coll = new Collection<int>(1, 2);
+
+            Assert.That(coll.Count, Is.EqualTo(2), "Count");
+            Assert.That(coll.Capacity, Is.GreaterThanOrEqualTo(1), "Capacity");
+
+            for (int i = 0; i < 50; i++) 
+            {
+                coll.Add(i);
+            }
+
+            Assert.That(coll.Count, Is.EqualTo(52), "Count");
+            Assert.That(coll.Capacity, Is.GreaterThanOrEqualTo(52), "Capacity");
+
+            var expected = Enumerable.Range(0, 50).ToArray(); ;
+            string expectedStr = "[1, 2, " + string.Join(", ", expected) + "]";
+            //var expected = "[1, 2, " + string.Join(", ", Enumerable.Range(0,50).ToArray() + "]");
+
+            Assert.AreEqual(expectedStr, coll.ToString());
+        }
+
+        [TestCase("Peter,Maria,Ivan", 0, "Peter")]
+        [TestCase("Peter,Maria,Ivan", 1, "Maria")]
+        [TestCase("Peter,Maria,Ivan", 2, "Ivan")]
+        [TestCase("Peter", 0, "Peter")]
+        public void Test_Collection_GetByValidIndex(string data, int index, string expected) 
+        {
+            var coll = new Collection<string>(data.Split(","));
+
+            var actual = coll[index];
+
+            Assert.That(actual, Is.EqualTo(expected));
+        }
+
+        [TestCase("Peter", 1)]
+        [TestCase("Peter,Maria, Ivan", 5)]
+        [TestCase("Peter,Maria, Ivan", -1)]
+        [TestCase("", 1)]
+        [TestCase("", 0)] // ?
+        public void Test_Collection_GetByInvalidIndex(string data, int index)
+        {
+            var coll = new Collection<string>(data.Split(",", StringSplitOptions.RemoveEmptyEntries));
+
+            Assert.That(() => coll[index], Throws.InstanceOf<ArgumentOutOfRangeException>());
+        }
+
     }
 }
